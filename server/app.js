@@ -4,9 +4,11 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-var indexRouter = require('./routes/index');
+var indexRouter = require('./routes');
 
 var app = express();
+// serve static files
+// app.use(express.static(path.join(__dirname, 'build')));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
