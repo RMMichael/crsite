@@ -1,6 +1,11 @@
 {
+  "engines": {
+    "node": "15.x"
+  },
   "scripts": {
-    "build": "cd client && npm install && npm run build && cd ../server && npm install",
+    "build": "npm run build-client && npm run build-server",
+    "build-client": "cd client && npm install --dev && npm run build && npm prune",
+    "build-server": "cd server && npm install --dev && npm run build && npm prune",
     "start": "cd server && npm run start"
   }
 }
