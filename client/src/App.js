@@ -1,10 +1,14 @@
 import logo from './logo.svg';
 import './App.css';
 import React from 'react';
+import {UserBar} from './user'
 
 function App() {
   return (
     <div className="App">
+      <UserBar>
+
+      </UserBar>
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>

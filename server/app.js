@@ -1,10 +1,29 @@
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
+var debug = require('debug')('crsite:server');
 
 
 var app = express();
 // serve static files
+
+var session = require('express-session');
+app.use(session({
+  resave: false, // don't save session if unmodified
+  saveUninitialized: false, // don't create session until something stored
+  secret: 'keyboard cat'
+}));
+
+app.get('/login', function(req, res){
+  var body = '';
+  if (req.session.views) {
+    ++req.session.views;
+  } else {
+    req.session.views = 1;
+    body += '<p>First time visiting? view this page in several browsers :)</p>';
+  }
+  res.send(body + '<p>viewed <strong>' + req.session.views + '</strong> times.</p>');
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -25,7 +44,8 @@ const pool = new Pool({
 })
 
 app.get('/db2', async (req, res) => {
-  res.send('test');
+  req.session.blah += 1;
+  res.send('test' + req.session.blah);
 })
 
 app.get('/db', async (req, res) => {
@@ -39,6 +59,41 @@ app.get('/db', async (req, res) => {
     console.error(err);
     res.send("Error " + err);
   }
+});
+
+app.get('/api/user', function (req, res) {
+  res.json({
+    status: 'ok',
+    user: req.session.user
+  });
+});
+
+// TODO - currently just logs in the first user in the user table
+app.post('/api/user/login', async (req, res) => {
+  debug(req.body);  // the received json
+  try {
+    const client = await pool.connect();
+    const result = await client.query('SELECT * FROM users LIMIT 1');
+    const user = result ? result.rows[0] : null;
+    if (user) {
+      req.session.user = user;
+      res.json({
+        status: 'ok',
+        user
+      });
+      return;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+  res.json({status: 'error'});
+});
+
+app.post('/api/user/logout', (req, res) => {
+  req.session.destroy();
+  res.json({
+    status: 'ok'
+  });
 });
 
 app.get('/*', function (req, res) {

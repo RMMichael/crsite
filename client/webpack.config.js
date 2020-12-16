@@ -36,6 +36,17 @@ module.exports = {
             }
         ]
     },
-
-    mode: 'development'
+    mode: 'development',
+    devtool: 'inline-source-map',
+    devServer: {
+        contentBase: './build',
+        proxy: {
+            '/api': 'http://127.0.0.1:8008'
+        },
+        historyApiFallback: {
+            disableDotRule: true,
+            index: '/index.html',
+        },
+    },
+    // cache: true,
 };
