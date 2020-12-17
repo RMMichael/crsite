@@ -21,13 +21,21 @@ async function addData() {
                 console.log(`title not found for: ${dept} ${number}; using label: ${label}`);
                 title = label;
             }
-            console.log(`${dept} ${number} ${title}`);
             let result = await addCourse(client, dept, number, title);
-            console.table(result);
+            // console.table(result);
 
             // add instructor
-
+            result = await addInstructor(client, instructor);
             // add class
+            result = await getInstructorId(client, instructor);
+            let profId = result.rows[0].id;
+            result = await getCourseID(client, title);
+            let courseId = result.rows[0].id;
+            console.log(profId);
+            console.log(courseId);
+            let term = 'Winter 2021';
+            result = await addClass(client, code, courseId, profId, term);
+
         }
     } finally {
         client.release();
@@ -49,17 +57,23 @@ function getTitle(courses, dept, number) {
 }
 
 async function addCourse(client, dept, number, title) {
-    console.log(dept);
-    console.log(number);
     return client.query(`INSERT INTO courses(title,dept,number) VALUES ('${title}','${dept}','${number}') ON CONFLICT DO NOTHING`);
 }
 
-function getInstructorId(client, name) {
+async function addClass(client, code, courseId, profId, term) {
+    return client.query(`INSERT INTO classes(course_code,course_id,instructor_id,term) VALUES (${code},${courseId},${profId},'${term}') ON CONFLICT DO NOTHING`);
+}
+
+async function addInstructor(client, name) {
+    return client.query(`INSERT INTO instructors(name) VALUES ('${name}') ON CONFLICT DO NOTHING`);
+}
+
+async function getInstructorId(client, name) {
     // client = await pool.connect();
     return client.query(`SELECT id from instructors WHERE '${name}' = name`);
 }
 
-function getCourseID(client, title) {
+async function getCourseID(client, title) {
     // let client = await pool.connect();
     return client.query(`SELECT id FROM courses WHERE '${title}' = title`);
 }
