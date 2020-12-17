@@ -96,6 +96,18 @@ app.post('/api/user/logout', (req, res) => {
   });
 });
 
+app.get('/api/review_table', async (req, res) => {
+  let text = `
+    SELECT c.dept, c.number, c.title, t.instructor, t.difficulty, t.hours_per_week, t.rating, t.review_count
+    FROM (
+        SELECT course_id, instructor, AVG(difficulty) as difficulty,
+               AVG(hours_per_week) as hours_per_week, AVG(rating) as rating, COUNT(*) as review_count
+        FROM classes JOIN reviews ON classes.course_code = reviews.course_code
+        GROUP BY classes.course_code
+      ) t JOIN courses c ON t.course_id = c.id
+  `;
+});
+
 app.get('/*', function (req, res) {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
