@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "start": "node bin/www",
-    "dev": "set -a && source ../.env && set + && npm run start",
-    "initdb": "set -a && source ../.env && set + && psql ${DATABASE_URL} -f sql/initdb.sql"
+    "dev": "set -a && source ../.env && set +a && npm run start",
+    "initdb": "set -a && source ../.env && set +a && psql ${DATABASE_URL} -f sql/initdb.sql",
+    "addData": "set -a && source ../.env && set +a && node sql/addData.js"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
