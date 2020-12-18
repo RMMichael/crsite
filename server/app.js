@@ -130,11 +130,12 @@ app.get('/api/course', async (req, res) => {
   try {
     client = await pool.connect();
     const result = await client.query(`
-    SELECT c.dept, c.number, c.title, t.instructor, t.difficulty, t.hours_per_week, t.rating, t.review_date, t.review_text, t.term
+    SELECT t.course_code, c.dept, c.number, c.title, t.instructor, t.difficulty, t.hours_per_week, t.rating, t.review_date, t.review_text, t.term
     FROM (
-        SELECT course_id, instructor, term, review_text, difficulty, hours_per_week, rating, review_date
+        SELECT reviews.course_code as course_code, course_id, instructor, term, review_text, difficulty, hours_per_week, rating, review_date
         FROM classes JOIN reviews ON classes.course_code = reviews.course_code
     ) t JOIN courses c ON t.course_id = c.id WHERE number ILIKE $1 AND dept ILIKE $2
+    ORDER BY t.review_date DESC
     `, [number, dept]);
     res.json({
       status: 'ok',
@@ -153,9 +154,9 @@ app.get('/api/instructor/:name', async (req, res) => {
   try {
     client = await pool.connect();
     const result = await client.query(`
-    SELECT c.dept, c.number, c.title, t.instructor, t.difficulty, t.hours_per_week, t.rating, t.review_date, t.review_text, t.term
+    SELECT t.course_code, c.dept, c.number, c.title, t.instructor, t.difficulty, t.hours_per_week, t.rating, t.review_date, t.review_text, t.term
     FROM (
-        SELECT course_id, instructor, term, review_text, difficulty, hours_per_week, rating, review_date
+        SELECT reviews.course_code as course_code, course_id, instructor, term, review_text, difficulty, hours_per_week, rating, review_date
         FROM classes JOIN reviews ON classes.course_code = reviews.course_code
     ) t JOIN courses c ON t.course_id = c.id WHERE t.instructor ILIKE $1 || '%'
     `, [name]);
@@ -169,9 +170,51 @@ app.get('/api/instructor/:name', async (req, res) => {
   }
 });
 
-app.get('/profile', function (req, res) {
-  let profile = req.session;
+app.post('/api/addreview', async (req, res) => {
+  let text = req.body.text;
+  let rating = parseFloat(req.body.rating);
+  let hours = parseFloat(req.body.hours);
+  let difficulty = parseFloat(req.body.difficulty);
+  let code = parseFloat(req.body.course_code);
+  let userid = req.session.user?.id;
+  let client;
+  console.log(JSON.stringify({userid, code, text, difficulty, hours, rating}));
+  try {
+    client = await pool.connect();
+    const result = await client.query(`
+    INSERT INTO reviews(user_id, course_code, review_text, difficulty, hours_per_week, rating)
+      VALUES($1, $2, $3, $4, $5, $6)
+    `, [userid, code, text, difficulty, hours, rating]
+    );
+    client.release();
+    res.json({
+      status: 'ok'
+    });
+  } catch (error) {
+    console.log(error);
+  }
 
+});
+
+app.get('/api/profile', async (req, res) =>  {
+  let userId = req.session.user.id;
+  let client;
+  try {
+    client = await pool.connect();
+    const result = await client.query(`
+    SELECT a.course_code, a.review_text, a.difficulty, a.hours_per_week, a.rating, a.review_date, t.title
+    FROM (
+        SELECT reviews.course_code, review_text, difficulty, hours_per_week, rating, review_date, course_id
+        FROM reviews JOIN classes
+        ON reviews.course_code = classes.course_code
+        WHERE user_id = $1
+    ) a JOIN courses as t ON id = a.course_id
+    `, [userId]
+    );
+    client.release();
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 app.get('/*', function (req, res) {

@@ -16,8 +16,9 @@ async function addData() {
     try {
         let maxUsers = 10;
         for (let i = 1; i <= maxUsers; i++) {
-            await addUser(client, `email${i}@uci.edu`, i*100);
+            await addUser(client, `email${i}@uci.edu`, i * 100);
         }
+
 
         let reviews = 0;
         let maxReviews = 200;
@@ -29,6 +30,8 @@ async function addData() {
                 console.log(`title not found for: ${dept} ${number}; using label: ${label}`);
                 title = label;
             }
+
+
 
             let result = await addCourse(client, dept, number, title);
             // console.table(result);

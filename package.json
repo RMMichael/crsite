@@ -6,7 +6,9 @@
     "build": "npm run build-client && npm run build-server",
     "build-client": "cd client && npm install --dev && npm run build && npm prune",
     "build-server": "cd server && npm install --dev && npm run build && npm prune",
-    "start": "cd server && npm run start"
+    "start": "cd server && npm run start",
+    "reset-db": "cd server && npm run initdb && npm run addData",
+    "startFromScratch": "npm run reset-db && npm run build && npm run start"
   },
   "cacheDirectories": ["client/node_modules", "server/node_modules"]
 }
