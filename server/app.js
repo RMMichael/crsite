@@ -97,7 +97,10 @@ app.post('/api/user/logout', (req, res) => {
 });
 
 app.get('/api/review_table', async (req, res) => {
-  let text = `
+  let client;
+  try {
+    client = await pool.connect();
+    const result = await client.query(`
     SELECT c.dept, c.number, c.title, t.instructor, t.difficulty, t.hours_per_week, t.rating, t.review_count
     FROM (
         SELECT course_id, instructor, AVG(difficulty) as difficulty,
@@ -105,7 +108,70 @@ app.get('/api/review_table', async (req, res) => {
         FROM classes JOIN reviews ON classes.course_code = reviews.course_code
         GROUP BY classes.course_code
       ) t JOIN courses c ON t.course_id = c.id
-  `;
+  `);
+    res.json({
+      status: 'ok',
+      result: result.rows
+    });
+    client.release();
+  } catch (error) {
+      client.release();
+    console.log(error.toString())
+  }
+});
+
+
+app.get('/api/course', async (req, res) => {
+  let client;
+  let dept = req.query.dept;
+  let number = req.query.number;
+  console.log(dept);
+  console.log(number);
+  try {
+    client = await pool.connect();
+    const result = await client.query(`
+    SELECT c.dept, c.number, c.title, t.instructor, t.difficulty, t.hours_per_week, t.rating, t.review_date, t.review_text, t.term
+    FROM (
+        SELECT course_id, instructor, term, review_text, difficulty, hours_per_week, rating, review_date
+        FROM classes JOIN reviews ON classes.course_code = reviews.course_code
+    ) t JOIN courses c ON t.course_id = c.id WHERE number ILIKE $1 AND dept ILIKE $2
+    `, [number, dept]);
+    res.json({
+      status: 'ok',
+      result: result.rows
+    });
+    client.release();
+  } catch(error) {
+    console.log(error);
+  }
+});
+
+app.get('/api/instructor/:name', async (req, res) => {
+  let client;
+  let name = req.params.name;
+
+  try {
+    client = await pool.connect();
+    const result = await client.query(`
+    SELECT c.dept, c.number, c.title, t.instructor, t.difficulty, t.hours_per_week, t.rating, t.review_date, t.review_text, t.term
+    FROM (
+        SELECT course_id, instructor, term, review_text, difficulty, hours_per_week, rating, review_date
+        FROM classes JOIN reviews ON classes.course_code = reviews.course_code
+    ) t JOIN courses c ON t.course_id = c.id WHERE t.instructor ILIKE $1 || '%'
+    `, [name]);
+    res.json({
+      status: 'ok',
+      result: result.rows
+    });
+    client.release();
+  } catch(error) {
+    console.log(error);
+  }
+});
+
+app.get('/profile', function (req, res) {
+  let profile = req.session;
+
 });
 
 app.get('/*', function (req, res) {

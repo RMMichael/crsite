@@ -5,6 +5,7 @@ module.exports = {
     entry: './src/index.js',
     output: {
         path: path.resolve(__dirname, '../server/public'),
+        publicPath: '/',
         filename: 'index.js'
     },
     plugins: [
@@ -39,7 +40,7 @@ module.exports = {
     mode: 'development',
     devtool: 'inline-source-map',
     devServer: {
-        contentBase: './build',
+        contentBase: '../server/public',
         proxy: {
             '/api': 'http://127.0.0.1:8008'
         },
